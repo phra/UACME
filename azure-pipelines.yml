@@ -1,0 +1,128 @@
+trigger:
+- build
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+# PowerShell
+# Run a PowerShell script on Linux, macOS, or Windows
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline' # Optional. Options: filePath, inline
+    #filePath: # Required when targetType == FilePath
+    #arguments: # Optional
+    script: '
+((Get-Content -path Source/Akagi/global.h -Raw) -replace "#define KUMA_STUB","//#define KUMA_STUB") | Set-Content -Path Source/Akagi/global.h
+      ' # Required when targetType == Inline
+    #errorActionPreference: 'stop' # Optional. Options: stop, continue, silentlyContinue
+    #failOnStderr: false # Optional
+    #ignoreLASTEXITCODE: false # Optional
+    #pwsh: false # Optional
+    #workingDirectory: # Optional
+
+# MSBuild
+# Build with MSBuild
+- task: MSBuild@1
+  inputs:
+    solution: '**/*.sln' 
+    #msbuildLocationMethod: 'version' # Optional. Options: version, location
+    #msbuildVersion: 'latest' # Optional. Options: latest, 16.0, 15.0, 14.0, 12.0, 4.0
+    msbuildArchitecture: 'x64' # Optional. Options: x86, x64
+    #msbuildLocation: # Optional
+    platform: 'x64' # Optional
+    configuration: 'release' # Optional
+    #msbuildArguments: # Optional
+    #clean: false # Optional
+    #maximumCpuCount: false # Optional
+    #restoreNugetPackages: false # Optional
+    #logProjectEvents: false # Optional
+    #createLogFile: false # Optional
+    #logFileVerbosity: 'normal' # Optional. Options: quiet, minimal, normal, detailed, diagnostic
+
+# PowerShell
+# Run a PowerShell script on Linux, macOS, or Windows
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline' # Optional. Options: filePath, inline
+    #filePath: # Required when targetType == FilePath
+    #arguments: # Optional
+    script: '
+cp Source/Akatsuki/output/x64/Release/Akatsuki64.dll Source/Naka/output/x64/Release/
+
+cp Source/Fubuki/output/x64/Release/Fubuki64.dll Source/Naka/output/x64/Release/
+      ' # Required when targetType == Inline
+    #errorActionPreference: 'stop' # Optional. Options: stop, continue, silentlyContinue
+    #failOnStderr: false # Optional
+    #ignoreLASTEXITCODE: false # Optional
+    #pwsh: false # Optional
+    #workingDirectory: # Optional
+
+# Command line
+# Run a command line script using Bash on Linux and macOS and cmd.exe on Windows
+- task: CmdLine@2
+  inputs:
+    script: '
+echo "" > Kamikaze.dll
+
+echo "" > Fubuki32.dll
+
+.\Naka64.exe Akatsuki64.dll
+
+.\Naka64.exe Fubuki64.dll
+
+.\Naka64.exe Fubuki32.dll
+
+.\Naka64.exe Kamikaze.dll
+
+.\Naka64.exe --stable
+
+dir
+      ' 
+    workingDirectory: $(System.DefaultWorkingDirectory)/Source/Naka/output/x64/Release/ # Optional
+    failOnStderr: true # Optional
+
+# PowerShell
+# Run a PowerShell script on Linux, macOS, or Windows
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline' # Optional. Options: filePath, inline
+    #filePath: # Required when targetType == FilePath
+    #arguments: # Optional
+    script: '
+cp Source/Naka/output/x64/Release/Akatsuki64.cd Source/Akagi/bin
+
+cp Source/Naka/output/x64/Release/Fubuki64.cd Source/Akagi/bin
+
+cp Source/Naka/output/x64/Release/Akatsuki64.key Source/Akagi/bin
+
+cp Source/Naka/output/x64/Release/Fubuki64.key Source/Akagi/bin
+
+cp Source/Naka/output/x64/Release/secrets64.bin Source/Akagi/bin
+      ' # Required when targetType == Inline
+    #errorActionPreference: 'stop' # Optional. Options: stop, continue, silentlyContinue
+    #failOnStderr: false # Optional
+    #ignoreLASTEXITCODE: false # Optional
+    #pwsh: false # Optional
+    #workingDirectory: # Optional
+
+# MSBuild
+# Build with MSBuild
+- task: MSBuild@1
+  inputs:
+    solution: '**/*.sln' 
+    #msbuildLocationMethod: 'version' # Optional. Options: version, location
+    #msbuildVersion: 'latest' # Optional. Options: latest, 16.0, 15.0, 14.0, 12.0, 4.0
+    msbuildArchitecture: 'x64' # Optional. Options: x86, x64
+    #msbuildLocation: # Optional
+    platform: 'x64' # Optional
+    configuration: 'release' # Optional
+    #msbuildArguments: # Optional
+    #clean: false # Optional
+    #maximumCpuCount: false # Optional
+    #restoreNugetPackages: false # Optional
+    #logProjectEvents: false # Optional
+    #createLogFile: false # Optional
+    #logFileVerbosity: 'normal' # Optional. Options: quiet, minimal, normal, detailed, diagnostic
+- publish: $(System.DefaultWorkingDirectory)/Source/Akagi/output/x64/Release/Akagi64.exe
+  artifact: UACME64
